@@ -27,18 +27,25 @@ def get_coords(data, i):
     return data[i][1]
 
 # Fitness
-def evaluate_population(data, solution):
-    assert len(solution) >= 2
-    
-    first = get_coords(data, solution[0])
-    last = get_coords(data, solution[-1])
-    score = distance(first, last)
-    
-    for i in range( len(solution) - 1 ):
-        start = get_coords(data, solution[i])
-        end  = get_coords(data, solution[i+1])
-        score += distance(start, end)
-    return score
+def fitness(population):
+    """
+    """
+    for j,pop in enumerate(population):
+        cost[j]=0
+        for z in range(cities):
+            cost[j]=cost[j]+distances[pop[z],pop[z+1]]
+
+    sortedIndex=cost.argsort(axis=0)#Indizees der nach ansteigenden Kosten sortierten Chromosomen
+    sortedCost=cost[sortedIndex] #die ansteigend sortierten Kosten
+    bestDist[it]=sortedCost[0]
+    sortedPopulation=population[sortedIndex] #Sortierung der Population nach ansteigenden Kosten
+    InvertedCost=1/sortedCost #Berechung des Nutzen (Fitness) aus den Kosten
+    #InvertedCost enthält die berechneten Fitness-Werte
+
+    if it%100==0:
+        print('-'*10+' Iteration: ',it)
+        print(InvertedCost[0])
+        print(sortedPopulation[0])
 
 def terminated():
     pass

@@ -27,6 +27,19 @@ def read_cities(file_name):
 			city_y.append(float(row[2]) * scale)
 	return names, city_x, city_y
 
+def read_germany(file_name):
+	ger_x = []
+	ger_y = []
+
+	scale = 1
+
+	with open(file_name, 'r') as f:
+		reader = csv.reader(f, delimiter=',', quoting=csv.QUOTE_NONE)
+		for row in reader:
+			ger_x.append(float(row[0]) * scale)
+			ger_y.append(float(row[1]) * scale)
+	return ger_x, ger_y
+
 def genetic_salesman(city_x, city_y, iterations):
 	assert len(city_x) == len(city_y)
 
@@ -57,7 +70,6 @@ def genetic_salesman(city_x, city_y, iterations):
 	###########################################################################
 
 	#Definition der Konstanten für den GA
-	iterations=5000;
 	POPSIZE=16;
 	CROSSPROP=0.99;
 	MUTPROP=0.05;
@@ -209,7 +221,11 @@ if __name__ == '__main__':
 	yshift=0.2
 
 	names, city_y, city_x = read_cities("cities.csv")
+	ger_x, ger_y = read_germany("german_borders.csv")
+
 	path_x, path_y, bestDist = genetic_salesman(city_x, city_y, ITERATIONS)
+
+	"Plot"
 
 	plt.figure(1)
 	plt.subplot(121)
@@ -218,6 +234,7 @@ if __name__ == '__main__':
 	plt.hold(True)		
 
 	plt.plot(path_x, path_y,'r-')
+	plt.plot(ger_x, ger_y, 'b,')
 
 	print(names)
 

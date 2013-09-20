@@ -1,161 +1,231 @@
-from random import shuffle, random, seed
+# -*- coding:utf-8 -*-
 
-from util import *
+import matplotlib
+matplotlib.use('TkAgg')
 
-data = [
-    ("Kyiv",      (50.4500,  30.5000) ), # 50° 27′ N,  30° 30′ E
-    ("Budapest",  (47.5000,  19.0500) ), # 47° 30′ N,  19°  3′ E
-    ("Teheran",   (35.7000,  51.4167) ), # 35° 42′ N,  51° 25′ E
-    ("Beijing",   (39.9000, 116.3833) ), # 39° 54′ N, 116° 23′ E
-    ("Jerusalem", (31.7833,  35.2167) ), # 31° 47′ N,  35° 13′ E
-    ("Bucharest", (44.4167,  26.1000) ), # 44°25′57″N 26°6′14″E
-    ("Hamilton",  (43.2500,  79.8667) ), # 43°15′N 79°52′W
-    ("Toronto",   (42.7000,  79.4000) ), # 43°42′N 79°24′W 
-]
+import numpy as np
+import matplotlib.pyplot as plt
+import csv
 
-seed(0)
+from scipy.spatial.distance import pdist,squareform
+from matplotlib.path import Path
 
-def create_random_trip(cities):
-    trip = [city for city in lrange(cities)]
-    shuffle(trip)
-    return tuple(trip)
+from util import distance as distance_lat_long
 
-def initialize_population(data, population_size):
-    return [create_random_trip(data) for unused in range(population_size)]
+def read_cities(file_name):
+	names = []
+	city_x = []
+	city_y = []
 
-def get_coords(data, i):
-    return data[i][1]
+	scale = 1
 
-# Fitness
-def fitness(population):
-    """
-    """
-    for j,pop in enumerate(population):
-        cost[j]=0
-        for z in range(cities):
-            cost[j]=cost[j]+distances[pop[z],pop[z+1]]
+	with open(file_name, 'r') as f:
+		reader = csv.reader(f, delimiter=',', quoting=csv.QUOTE_NONE)
+		for row in reader:
+			names.append(row[0])
+			city_x.append(float(row[1]) * scale)
+			city_y.append(float(row[2]) * scale)
+	return names, city_x, city_y
 
-    sortedIndex=cost.argsort(axis=0)#Indizees der nach ansteigenden Kosten sortierten Chromosomen
-    sortedCost=cost[sortedIndex] #die ansteigend sortierten Kosten
-    bestDist[it]=sortedCost[0]
-    sortedPopulation=population[sortedIndex] #Sortierung der Population nach ansteigenden Kosten
-    InvertedCost=1/sortedCost #Berechung des Nutzen (Fitness) aus den Kosten
-    #InvertedCost enthält die berechneten Fitness-Werte
+def genetic_salesman(city_x, city_y, iterations):
+	assert len(city_x) == len(city_y)
 
-    if it%100==0:
-        print('-'*10+' Iteration: ',it)
-        print(InvertedCost[0])
-        print(sortedPopulation[0])
+	#Anzahl der Städte
+	cities = len(city_x)
 
-def terminated():
-    pass
+	#X- und Y- Koordinaten dcitieses Polygons, innerhalb dessen die Städte liegen
+	x=np.array([2, 10, 14, 11, 15, 14, 10, 7, 5, 2, 1, 3, 2])
+	y=np.array([2, 0, 2, 5, 9, 19, 16, 19, 16, 12, 6, 5, 2])
+	Verts=np.array([x,y]).transpose()
 
-def select(population, scores):
-    """
-    1)  The fitness function is evaluated for each individual, 
-        providing fitness values, which are then normalized. 
-        Normalization means dividing the fitness value of each 
-        individual by the sum of all fitness values, so that 
-        the sum of all resulting fitness values equals 1.
-        
-    2)  The population is sorted by descending fitness values.
-    
-    3)  Accumulated normalized fitness values are computed 
-        (the accumulated fitness value of an individual is 
-        the sum of its own fitness value plus the fitness 
-        values of all the previous individuals). The accumulated 
-        fitness of the last individual should be 1 (otherwise 
-        something went wrong in the normalization step).
-        
-    4)  A random number R between 0 and 1 is chosen.
-    
-    5)  The selected individual is the first one whose 
-        accumulated normalized value is greater than R.    
-    """
-    
-    size = len(population)
-    print 'scores', scores
-    summed_score = sum(scores)
-    
-    normalized_score = [x / summed_score for x in scores]    
-    normalized_score.sort()
-    
-    accumulated_score = []
-    
-    print size
-    
-    for i in range(size):
-        accumulated_score.append( sum(normalized_score[:i + 1])  )
-        
-    R = random()
-    
-    print accumulated_score
-    
-    for s in accumulated_score:
-        if R > s:
-            return s
-    else:
-        print('Nothing has been gambled out!')
-        return 
+	#Erzeugen der Städte und der Plot der Städte in der grafischen Oberfläche
 
-def crossover(mother, father):
-    """ Order 1 Crossover is a fairly simple permutation crossover. 
-    Basically, a swath of consecutive alleles from parent 1 drops 
-    down, and remaining values are placed in the child in the 
-    order which they appear in parent 2.     
-    """    
-    assert len(mother) == len(father)
-    
-    size = len(mother)    
+	i=0
+	np.random.seed(seed=346466)
+	locations=np.zeros((cities,2)) #Zufällige Festlegung der Orte
 
-    newborn = [-1 for i in range(size)]
-    
-    u_border = int(size / 4.0)
-    o_border = int(3.0 / 4.0 * size)
-        
-    for i in range(u_border, o_border):
-        newborn[i] = mother[i]
-    
-    remains = (x for x in father if x not in newborn)
-    
-    for i in range(size):
-        if newborn[i] == -1:
-            newborn[i] = next(remains)
-    
-    return tuple(newborn)   
+	for i, (xp, yp) in enumerate(zip(city_x, city_y)):
+		locations[i,:]=[xp,yp]					
+	
+	#Berechnung der euklidischen Distanz zwischen allen möglichen Stadtpaaren
+	distances = squareform(pdist(locations, distance_lat_long))
 
-def mutate():
-    pass
+	np.random.seed()
 
-def accept():
-    pass
+	###########################################################################
+	#                      Genetischer Algorithmus zur Lösung des TSP         #
+	###########################################################################
+
+	#Definition der Konstanten für den GA
+	iterations=5000;
+	POPSIZE=16;
+	CROSSPROP=0.99;
+	MUTPROP=0.05;
+
+	bestDist=np.zeros(iterations) #In diesem Array wird für jede Iteration die beste Distanz gespeichert
+	#Erzeugen einer zufälligen Startpopulation
+	population=np.zeros((POPSIZE,cities+1))
+	for j in range(POPSIZE):
+			population[j,0:cities]=np.random.permutation(cities)
+			population[j,cities]=population[j,0]
+
+	cost=np.zeros(POPSIZE)#Speichert die Kosten jedes Chromosoms der aktuellen Population
+	#Berechnung der Kosten jedes Chromosoms
+
+
+	##################################################################################################
+	for it in range(iterations):
+
+			#1.Berechne Fitness der aktuellen Chromosomen#################################################
+			for j,pop in enumerate(population):
+					cost[j]=0
+					for z in range(cities):
+							cost[j]=cost[j]+distances[pop[z],pop[z+1]]
+
+			sortedIndex=cost.argsort(axis=0)#Indizees der nach ansteigenden Kosten sortierten Chromosomen
+			sortedCost=cost[sortedIndex] #die ansteigend sortierten Kosten
+			bestDist[it]=sortedCost[0]
+			sortedPopulation=population[sortedIndex] #Sortierung der Population nach ansteigenden Kosten
+			InvertedCost=1/sortedCost #Berechung des Nutzen (Fitness) aus den Kosten
+			#InvertedCost enthält die berechneten Fitness-Werte
+
+			#2.Selektion: Zufällige Auswahl von Chromosomen aus der Population####################
+			#Mit dem folgenden Prozess wird gewährleistet, dass die Wahrscheinlichkeit für die
+			#Selektion eines Chromosoms umso größer ist, je größer sein Nutzenwert ist.
+			InvertedCostSum = InvertedCost.sum()
+			rn1=InvertedCostSum*np.random.rand()
+			found1 = False
+			index=1
+			while not found1:
+					if rn1<InvertedCost[:index].sum(axis=0):
+							found1=index
+					else:
+							index+=1
+			found1=found1-1
+			equal=True
+			while equal:
+					rn2=InvertedCostSum*np.random.rand()
+					found2 = False
+					index=1
+					while not found2:
+							if rn2<InvertedCost[:index].sum(axis=0):
+									found2=index
+							else:
+									index+=1
+					found2=found2-1
+					if found2 != found1:
+							equal=False
+			parent1=sortedPopulation[found1]
+			parent2=sortedPopulation[found2]
+			########## parent1 und parent2 sind die selektierten Chromsomen##############################
+
+
+
+			#3.Kreuzung####################################################################################
+			crossrn=np.random.rand()
+			if crossrn<CROSSPROP:
+					cp=np.ceil(np.random.rand()*cities)
+					head1=parent1[:cp]
+					tailind=0
+					tail1=np.zeros(cities-cp+1)
+					for a in range(cities):
+							if parent2[a] not in head1:
+									tail1[tailind]=parent2[a]
+									tailind+=1
+					tail1[-1]=head1[0]
+					head2=parent2[:cp]
+					tailind=0
+					tail2=np.zeros(cities-cp+1)
+					for a in range(cities):
+							if parent1[a] not in head2:
+									tail2[tailind]=parent1[a]
+									tailind+=1
+					tail2[-1]=head2[0]
+					child1=np.append(head1,tail1)
+					child2=np.append(head2,tail2)
+			#child1 und child2 sind die Ergebnisse der Kreuzung###############################################
+
+
+			#4. Mutation#########################################################################################
+			mutrn=np.random.rand()
+			if mutrn<MUTPROP:
+					mutInd=np.ceil(np.random.rand(2)*(cities-1))
+					first=child1[mutInd[0]]
+					second=child1[mutInd[1]]
+					child1[mutInd[0]]=second
+					child1[mutInd[1]]=first
+					child1[-1]=child1[0]
+
+			mutrn=np.random.rand()
+			if mutrn<MUTPROP:
+					mutInd=np.ceil(np.random.rand(2)*(cities-1))
+					first=child2[mutInd[0]]
+					second=child2[mutInd[1]]
+					child2[mutInd[0]]=second
+					child2[mutInd[1]]=first
+					child2[-1]=child2[0]
+			#child1 und child2 sind die Resultate der Mutation################################################
+
+
+
+			#5. Ersetze die bisher schlechtesten Chromosomen durch die neu gebildeten Chromosomen, falls die neuen
+			#besser sind
+			costChild1=0
+			costChild2=0
+			for z in range(cities):
+					costChild1=costChild1+distances[child1[z],child1[z+1]]
+					costChild2=costChild2+distances[child2[z],child2[z+1]]
+			replace1=False
+			replace2=False
+			index=POPSIZE-1
+			while index > 0:
+					if sortedCost[index]>costChild1 and not replace1:
+							if not np.ndarray.any(np.ndarray.all(child1==sortedPopulation,axis=1)):
+									sortedPopulation[index]=child1
+							replace1=True
+					elif sortedCost[index]>costChild2 and not replace2:
+							if not np.ndarray.any(np.ndarray.all(child2==sortedPopulation,axis=1)):
+									sortedPopulation[index]=child2
+							replace2=True
+					if replace1 and replace2:
+							break
+					index=index-1
+			population=sortedPopulation
+			######################################Ende der Iteration#############################
+
+	#Graphische Anzeige der Kosten über die Iterationen und graphische Anzeige des gefundenen Weges
+	xcoords=[]
+	ycoords=[]
+	for i in range(cities+1):
+			xcoords.append(locations[sortedPopulation[0,i],0])
+			ycoords.append(locations[sortedPopulation[0,i],1])
+
+	return xcoords, ycoords, bestDist
 
 if __name__ == '__main__':
-    seed(0)
-    
-    population_size = 10 
-    
-    # Generate random population of chromosomes
-    population = initialize_population(data, population_size)
-    
-    # Evaluate the fitness of each chromosome in the population
-    scores = [evaluate_population(data, solution) for solution in population]
-    
-    m = (3, 5, 7, 2, 1, 6, 4, 8)
-    f = (2, 5, 7, 6, 8, 1, 3, 4)
-    
-    # Create, accept, and test a new population:
-    while not terminated():
-        # Select according to fitness
-        mother, father = select(population, score)
-            
-        # With a crossover probability perform crossover or copy parents
-        offspring = crossover(mother, father)
-           
-        # With a mutation probability mutate offspring at each position in chromosome
-        mutated = mutate(offspring)
-            
-        if not accept(mutated):
-            continue
-            
-        score =  evaluate_population(mutated)
+	ITERATIONS = 5000
+	#Definition von Konstanten für die Anzeige der Stadtindizess
+	xshift=0.2
+	yshift=0.2
+
+	names, city_y, city_x = read_cities("cities.csv")
+	path_x, path_y, bestDist = genetic_salesman(city_x, city_y, ITERATIONS)
+
+	plt.figure(1)
+	plt.subplot(121)
+	#plt.plot(city_x,city_y)
+	plt.grid(True)
+	plt.hold(True)		
+
+	plt.plot(path_x, path_y,'r-')
+
+	print(names)
+
+	for name, xp, yp in zip(names, city_x, city_y):
+		plt.plot([xp],[yp],'ro')
+		plt.text(xp+xshift,yp+yshift, name)
+
+	plt.subplot(122)
+	plt.grid(True)
+	plt.plot(range(ITERATIONS),bestDist)
+	plt.show()

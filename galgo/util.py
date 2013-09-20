@@ -1,3 +1,5 @@
+# -*- coding:utf-8 -*-
+
 # Haversine formula example in Python
 # Author: Wayne Dyck
 
@@ -27,3 +29,9 @@ def distance(origin, destination):
 
 def lrange(iterable, i=0):
     return range(i, len(iterable))
+
+def static_var(varname, value):
+    def decorate(func):
+        setattr(func, varname, value)
+        return func
+    return decorate    

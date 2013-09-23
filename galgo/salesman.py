@@ -9,6 +9,7 @@ import csv
 
 from scipy.spatial.distance import pdist,squareform
 from matplotlib.path import Path
+from matplotlib import animation
 
 from util import distance as distance_lat_long
 
@@ -43,24 +44,16 @@ def read_germany(file_name):
 def genetic_salesman(city_x, city_y, iterations):
 	assert len(city_x) == len(city_y)
 
-	#Anzahl der Städte
+	#Number of cities
 	cities = len(city_x)
 
-	#X- und Y- Koordinaten dcitieses Polygons, innerhalb dessen die Städte liegen
-	x=np.array([2, 10, 14, 11, 15, 14, 10, 7, 5, 2, 1, 3, 2])
-	y=np.array([2, 0, 2, 5, 9, 19, 16, 19, 16, 12, 6, 5, 2])
-	Verts=np.array([x,y]).transpose()
-
-	#Erzeugen der Städte und der Plot der Städte in der grafischen Oberfläche
-
-	i=0
 	np.random.seed(seed=346466)
 	locations=np.zeros((cities,2)) #Zufällige Festlegung der Orte
 
 	for i, (xp, yp) in enumerate(zip(city_x, city_y)):
 		locations[i,:]=[xp,yp]					
 	
-	#Berechnung der euklidischen Distanz zwischen allen möglichen Stadtpaaren
+	# Calculates distance between all cities
 	distances = squareform(pdist(locations, distance_lat_long))
 
 	np.random.seed()
@@ -84,6 +77,8 @@ def genetic_salesman(city_x, city_y, iterations):
 	cost=np.zeros(POPSIZE)#Speichert die Kosten jedes Chromosoms der aktuellen Population
 	#Berechnung der Kosten jedes Chromosoms
 
+	x_paths = np.zeros((ITERATIONS, cities + 1))
+	y_paths = np.zeros((ITERATIONS, cities + 1))
 
 	##################################################################################################
 	for it in range(iterations):
@@ -205,44 +200,131 @@ def genetic_salesman(city_x, city_y, iterations):
 			population=sortedPopulation
 			######################################Ende der Iteration#############################
 
-	#Graphische Anzeige der Kosten über die Iterationen und graphische Anzeige des gefundenen Weges
-	xcoords=[]
-	ycoords=[]
-	for i in range(cities+1):
-			xcoords.append(locations[sortedPopulation[0,i],0])
-			ycoords.append(locations[sortedPopulation[0,i],1])
+			for i in range(cities+1):
+				x_paths[it, i] = locations[sortedPopulation[0,i],0]
+				y_paths[it, i] = locations[sortedPopulation[0,i],1]
 
-	return xcoords, ycoords, bestDist
+	return x_paths, y_paths, bestDist
 
-if __name__ == '__main__':
-	ITERATIONS = 5000
-	#Definition von Konstanten für die Anzeige der Stadtindizess
+def plot_time(path_x, path_y, city_x, city_y, ger_x, ger_y, distances, names):
+	for i in range(ITERATIONS):
+
+		path_x, path_y = x_paths[i], y_paths[i]
+		distance = distances[:i]
+
+		"Plot"
+
+		plt.figure(1)
+		plt.subplot(121)
+		#plt.plot(city_x,city_y)
+		plt.grid(True)
+		plt.hold(True)		
+
+		plt.axis([6., 15., 47., 55.])
+		ax = plt.gca()
+		ax.set_autoscale_on(False)
+
+		plt.plot(path_x, path_y,'r-')
+		plt.plot(ger_x, ger_y, 'b,')
+
+		for name, xp, yp in zip(names, city_x, city_y):
+			plt.plot([xp],[yp],'ro')
+			plt.text(xp+xshift,yp+yshift, name)
+
+		plt.subplot(122)
+		plt.grid(True)
+		plt.plot(range(i),distance)
+
+		plt.show()
+
+def movietime(x_paths, y_paths, ger_x, ger_y, distances, names, filename='genetic_salesman.mp4'):
+	"""
+		Creates an animation of the traveling salesman steps
+		by drawing one integration step after another
+		and saves it.
+		x:  Array of x coords
+		y:  Array of y coords
+		filename: File to save the animation to
+	"""
+
+	MOVIEWRITER = 'mencoder'
+
+	# Limit plot to lat long of Germany
+	XLIM = (6., 15.)
+	YLIM = (47., 55.)
+	REFRESHRATE = 10
+
 	xshift=0.2
 	yshift=0.2
+
+	fig = matplotlib.pyplot.figure()
+
+	# Map part
+
+	ax1 = fig.add_subplot(121, autoscale_on=False, xlim=XLIM, ylim=YLIM)
+	ax1.grid()
+	line1, = ax1.plot([], [], 'o-', lw=2)
+
+	# Plot borders 
+	border, = ax1.plot([], [], 'b,', lw=1)
+
+	# Plot names
+	for name, xp, yp in zip(names, city_x, city_y):
+		ax1.plot([xp],[yp],'ro')
+		ax1.text(xp+xshift,yp+yshift, name)
+
+	time_template = 'Iteration = %d'
+	time_text = ax1.text(0.05, 0.9, '', transform=ax1.transAxes)
+
+	# Distance part
+
+	I_LIM = (0., max(distances) * 1.1)
+
+	ax2 = fig.add_subplot(122, autoscale_on=True)
+	ax2.grid()
+	line2, = ax2.plot([], [], 'o-', lw=2, label="Iterations")
+
+	def init():
+		line1.set_data([], [])
+		line2.set_data([], [])
+		time_text.set_text('')
+		border.set_data(ger_x, ger_y)
+
+		return line1, time_text, border, line2
+
+	def animate(i):
+		x = x_paths[i]
+		y = y_paths[i]
+
+		iteration_range = np.arange(0, i)
+		
+		distance = distances[:i]
+
+		# Map part
+		line1.set_data(x, y)
+		time_text.set_text(time_template % i)
+
+		# Distance part
+		line2.set_data(iteration_range, distance)
+
+		return line1, time_text, border, line2
+
+	ani = matplotlib.animation.FuncAnimation(fig, animate, frames=len(distances), interval=REFRESHRATE, blit=True, init_func=init)
+	#ani.save(filename, writer=animation.FFMpegFileWriter(), fps=30)
+
+	plt.show()
+
+
+if __name__ == '__main__':
+
+	ITERATIONS = 5000
+	#Definition von Konstanten für die Anzeige der Stadtindizess
 
 	names, city_y, city_x = read_cities("cities.csv")
 	ger_x, ger_y = read_germany("german_borders.csv")
 
-	path_x, path_y, bestDist = genetic_salesman(city_x, city_y, ITERATIONS)
+	x_paths, y_paths, distances = genetic_salesman(city_x, city_y, ITERATIONS)
 
-	"Plot"
+	#plot_time(x_paths, y_paths, city_x, city_y, distances, names)
+	movietime(x_paths, y_paths, ger_x, ger_y, distances, names)
 
-	plt.figure(1)
-	plt.subplot(121)
-	#plt.plot(city_x,city_y)
-	plt.grid(True)
-	plt.hold(True)		
-
-	plt.plot(path_x, path_y,'r-')
-	plt.plot(ger_x, ger_y, 'b,')
-
-	print(names)
-
-	for name, xp, yp in zip(names, city_x, city_y):
-		plt.plot([xp],[yp],'ro')
-		plt.text(xp+xshift,yp+yshift, name)
-
-	plt.subplot(122)
-	plt.grid(True)
-	plt.plot(range(ITERATIONS),bestDist)
-	plt.show()

@@ -13,6 +13,8 @@ from matplotlib import animation
 
 from util import distance as distance_lat_long
 
+import argparse
+
 def read_cities(file_name):
 	names = []
 	city_x = []
@@ -41,13 +43,13 @@ def read_germany(file_name):
 			ger_y.append(float(row[1]) * scale)
 	return ger_x, ger_y
 
-def genetic_salesman(city_x, city_y, iterations):
+def genetic_salesman(city_x, city_y, iterations, crossing, mutation):
 	assert len(city_x) == len(city_y)
 
 	#Number of cities
 	cities = len(city_x)
 
-	np.random.seed(seed=346466)
+	np.random.seed(seed=13374223)
 	locations=np.zeros((cities,2)) #Zufällige Festlegung der Orte
 
 	for i, (xp, yp) in enumerate(zip(city_x, city_y)):
@@ -58,27 +60,18 @@ def genetic_salesman(city_x, city_y, iterations):
 
 	np.random.seed()
 
-	###########################################################################
-	#                      Genetischer Algorithmus zur Lösung des TSP         #
-	###########################################################################
-
-	#Definition der Konstanten für den GA
-	POPSIZE=16;
-	CROSSPROP=0.99;
-	MUTPROP=0.2;
-
 	bestDist=np.zeros(iterations) #In diesem Array wird für jede Iteration die beste Distanz gespeichert
 	#Erzeugen einer zufälligen Startpopulation
-	population=np.zeros((POPSIZE,cities+1))
-	for j in range(POPSIZE):
+	population=np.zeros((cities,cities+1))
+	for j in range(cities):
 			population[j,0:cities]=np.random.permutation(cities)
 			population[j,cities]=population[j,0]
 
-	cost=np.zeros(POPSIZE)#Speichert die Kosten jedes Chromosoms der aktuellen Population
+	cost=np.zeros(cities)#Speichert die Kosten jedes Chromosoms der aktuellen Population
 	#Berechnung der Kosten jedes Chromosoms
 
-	x_paths = np.zeros((ITERATIONS, cities + 1))
-	y_paths = np.zeros((ITERATIONS, cities + 1))
+	x_paths = np.zeros((iterations, cities + 1))
+	y_paths = np.zeros((iterations, cities + 1))
 
 	##################################################################################################
 	for it in range(iterations):
@@ -130,7 +123,7 @@ def genetic_salesman(city_x, city_y, iterations):
 
 			#3.Kreuzung####################################################################################
 			crossrn=np.random.rand()
-			if crossrn<CROSSPROP:
+			if crossrn<crossing:
 					cp=np.ceil(np.random.rand()*cities)
 					head1=parent1[:cp]
 					tailind=0
@@ -155,7 +148,7 @@ def genetic_salesman(city_x, city_y, iterations):
 
 			#4. Mutation#########################################################################################
 			mutrn=np.random.rand()
-			if mutrn<MUTPROP:
+			if mutrn<mutation:
 					mutInd=np.ceil(np.random.rand(2)*(cities-1))
 					first=child1[mutInd[0]]
 					second=child1[mutInd[1]]
@@ -164,7 +157,7 @@ def genetic_salesman(city_x, city_y, iterations):
 					child1[-1]=child1[0]
 
 			mutrn=np.random.rand()
-			if mutrn<MUTPROP:
+			if mutrn<mutation:
 					mutInd=np.ceil(np.random.rand(2)*(cities-1))
 					first=child2[mutInd[0]]
 					second=child2[mutInd[1]]
@@ -184,7 +177,7 @@ def genetic_salesman(city_x, city_y, iterations):
 					costChild2=costChild2+distances[child2[z],child2[z+1]]
 			replace1=False
 			replace2=False
-			index=POPSIZE-1
+			index=cities-1
 			while index > 0:
 					if sortedCost[index]>costChild1 and not replace1:
 							if not np.ndarray.any(np.ndarray.all(child1==sortedPopulation,axis=1)):
@@ -207,7 +200,7 @@ def genetic_salesman(city_x, city_y, iterations):
 	return x_paths, y_paths, bestDist
 
 def plot_time(path_x, path_y, city_x, city_y, ger_x, ger_y, distances, names):
-	for i in range(ITERATIONS):
+	for i in range(iterations):
 
 		path_x, path_y = x_paths[i], y_paths[i]
 		distance = distances[:i]
@@ -319,13 +312,21 @@ if __name__ == '__main__':
 	import os, sys
 	os.chdir(os.path.dirname(os.path.abspath(sys.argv[0])))
 
-	ITERATIONS = 5000
+	parser = argparse.ArgumentParser()
+	parser.add_argument("-t", "--cities", default="cities.csv", help="CSV file with cities")
+	parser.add_argument("-b", "--borders", default="german_borders.csv", help="CSV file with country borders")
+	parser.add_argument("-i", "--iterations", type=int, default=5000, help="Number of generations/iterations")
+	parser.add_argument("-c", "--crossing", type=float, default=0.99, help="Gene crossing probaility")
+	parser.add_argument("-m", "--mutation", type=float, default=0.1, help="Mutation probability")
+
+	args = parser.parse_args()
+	
 	#Definition von Konstanten für die Anzeige der Stadtindizess
 
-	names, city_y, city_x = read_cities("cities.csv")
-	ger_x, ger_y = read_germany("german_borders.csv")
+	names, city_y, city_x = read_cities(args.cities)
+	ger_x, ger_y = read_germany(args.borders)
 
-	x_paths, y_paths, distances = genetic_salesman(city_x, city_y, ITERATIONS)
+	x_paths, y_paths, distances = genetic_salesman(city_x, city_y, args.iterations, args.crossing, args.mutation)
 
 	#plot_time(x_paths, y_paths, city_x, city_y, distances, names)
 	movietime(x_paths, y_paths, ger_x, ger_y, distances, names)

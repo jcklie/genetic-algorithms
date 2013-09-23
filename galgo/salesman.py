@@ -65,7 +65,7 @@ def genetic_salesman(city_x, city_y, iterations):
 	#Definition der Konstanten für den GA
 	POPSIZE=16;
 	CROSSPROP=0.99;
-	MUTPROP=0.1;
+	MUTPROP=0.2;
 
 	bestDist=np.zeros(iterations) #In diesem Array wird für jede Iteration die beste Distanz gespeichert
 	#Erzeugen einer zufälligen Startpopulation
@@ -280,7 +280,7 @@ def movietime(x_paths, y_paths, ger_x, ger_y, distances, names, filename='geneti
 
 	I_LIM = (0., max(distances) * 1.1)
 
-	ax2 = fig.add_subplot(122, autoscale_on=False, xlim=I_LIM, ylim=(0, len(distances)))
+	ax2 = fig.add_subplot(122, autoscale_on=False, xlim=(0, len(distances)), ylim=I_LIM)
 	ax2.grid()
 	line2, = ax2.plot([], [], 'r-,', lw=2, label="Iterations", markersize=2)
 
@@ -316,6 +316,8 @@ def movietime(x_paths, y_paths, ger_x, ger_y, distances, names, filename='geneti
 
 
 if __name__ == '__main__':
+	import os, sys
+	os.chdir(os.path.dirname(os.path.abspath(sys.argv[0])))
 
 	ITERATIONS = 5000
 	#Definition von Konstanten für die Anzeige der Stadtindizess

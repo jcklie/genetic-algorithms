@@ -2,9 +2,12 @@ genetic-algorithms
 ==================
 
 Implementation of some genetic algorithms.
+
+Installation
+============
    
     $ sudo apt-get install tk-dev
-    $ virtualvenv venv
+    $ virtualenv venv
     $ source venv/bin/activate
     $ pip install -r REQUIREMENTS.txt --no-index --find-links file:///tmp/packages
 

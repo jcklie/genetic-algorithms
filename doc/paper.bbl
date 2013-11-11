@@ -1,0 +1,111 @@
+% $ biblatex auxiliary file $
+% $ biblatex version 1.7 $
+% Do not modify the above lines!
+%
+% This is an auxiliary file used by the 'biblatex' package.
+% This file may safely be deleted. It will be recreated as
+% required.
+%
+\begingroup
+\makeatletter
+\@ifundefined{ver@biblatex.sty}
+  {\@latex@error
+     {Missing 'biblatex' package}
+     {The bibliography requires the 'biblatex' package.}
+      \aftergroup\endinput}
+  {}
+\endgroup
+
+\entry{9780691152707}{book}{}
+  \name{author}{1}{}{%
+    {{}%
+     {Cook}{C.}%
+     {William~J.}{W.~J.}%
+     {}{}%
+     {}{}}%
+  }
+  \list{publisher}{1}{%
+    {Princeton University Press}%
+  }
+  \strng{namehash}{CWJ1}
+  \strng{fullhash}{CWJ1}
+  \field{sortinit}{C}
+  \field{isbn}{0691152705}
+  \field{title}{In Pursuit of the Traveling Salesman: Mathematics at the Limits
+  of Computation}
+  \field{year}{2011}
+\endentry
+
+\entry{Ezziane:2002:SKP:965702.965705}{article}{}
+  \name{author}{1}{}{%
+    {{}%
+     {Ezziane}{E.}%
+     {Zoheir}{Z.}%
+     {}{}%
+     {}{}}%
+  }
+  \list{publisher}{1}{%
+    {Cambridge University Press}%
+  }
+  \keyw{Genetic Programming, Knapsack Problem, Optimization, Self-Adaptive
+  Penalty Functions}
+  \strng{namehash}{EZ1}
+  \strng{fullhash}{EZ1}
+  \field{sortinit}{E}
+  \field{issn}{0890-0604}
+  \field{title}{Solving the 0/1 knapsack problem using an adaptive genetic
+  algorithm}
+  \list{location}{1}{%
+    {New York, NY, USA}%
+  }
+  \field{journaltitle}{Artif. Intell. Eng. Des. Anal. Manuf.}
+  \field{year}{2002}
+\endentry
+
+\entry{9783540731894}{book}{}
+  \name{author}{2}{}{%
+    {{}%
+     {Sivanandam}{S.}%
+     {S.N.}{S.}%
+     {}{}%
+     {}{}}%
+    {{}%
+     {Deepa}{D.}%
+     {S.~N.}{S.~N.}%
+     {}{}%
+     {}{}}%
+  }
+  \list{publisher}{1}{%
+    {Springer}%
+  }
+  \strng{namehash}{SSDSN1}
+  \strng{fullhash}{SSDSN1}
+  \field{sortinit}{S}
+  \field{isbn}{354073189X}
+  \field{title}{Introduction to Genetic Algorithms}
+  \field{year}{2007}
+\endentry
+
+\entry{0691026157}{book}{}
+  \name{author}{1}{}{%
+    {{}%
+     {Williams}{W.}%
+     {George~Christopher}{G.~C.}%
+     {}{}%
+     {}{}}%
+  }
+  \list{publisher}{1}{%
+    {Princeton University Press}%
+  }
+  \strng{namehash}{WGC1}
+  \strng{fullhash}{WGC1}
+  \field{sortinit}{W}
+  \field{isbn}{0691026157}
+  \field{title}{Adaptation and Natural Selection}
+  \field{year}{1996}
+\endentry
+
+\lossort
+\endlossort
+
+\endinput

@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.5-1.40.14 (TeX Live 2013/Debian) (format=pdflatex 2013.11.8)  13 NOV 2013 08:54
+This is pdfTeX, Version 3.1415926-2.5-1.40.14 (TeX Live 2013/Debian) (format=pdflatex 2013.11.8)  13 NOV 2013 12:59
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1053,6 +1053,9 @@ File: tsp.png Graphic file (type png)
 Package pdftex.def Info: tsp.png used on input line 236.
 (pdftex.def)             Requested size: 180.0pt x 208.74861pt.
 
+
+LaTeX Warning: `!h' float specifier changed to `!ht'.
+
 (/usr/share/texlive/texmf-dist/tex/latex/listings/lstlang1.sty
 File: lstlang1.sty 2013/06/27 1.5pre1 listings language file
 )
@@ -1060,23 +1063,24 @@ Underfull \hbox (badness 10000) in paragraph at lines 242--243
 
  []
 
-[8 <./tsp.png>]
+
 Underfull \hbox (badness 10000) in paragraph at lines 249--250
 
  []
 
+[8]
 LaTeX Font Info:    External font `lmex10' loaded for size
 (Font)              <9> on input line 255.
 LaTeX Font Info:    External font `lmex10' loaded for size
 (Font)              <5> on input line 255.
 LaTeX Font Info:    Try loading font information for OMS+lmr on input line 257.
 
-(/usr/share/texmf/tex/latex/lm/omslmr.fd
+ (/usr/share/texmf/tex/latex/lm/omslmr.fd
 File: omslmr.fd 2009/10/30 v1.6 Font defs for Latin Modern
 )
 LaTeX Font Info:    Font shape `OMS/lmr/m/n' in size <9> not available
 (Font)              Font shape `OMS/lmsy/m/n' tried instead on input line 257.
- [9]
+ [9 <./tsp.png>]
 Underfull \hbox (badness 10000) in paragraph at lines 285--286
 
  []
@@ -1108,7 +1112,7 @@ Package logreq Info: Writing requests to 'paper.run.xml'.
 Here is how much of TeX's memory you used:
  12792 strings out of 494938
  184827 string characters out of 6178156
- 457005 words of memory out of 5000000
+ 454005 words of memory out of 5000000
  15733 multiletter control sequences out of 15000+600000
  63722 words of font info for 60 fonts, out of 8000000 for 9000
  36 hyphenation exceptions out of 8191
@@ -1122,7 +1126,7 @@ mf/fonts/type1/public/lm/lmr10.pfb></usr/share/texmf/fonts/type1/public/lm/lmr1
 /type1/public/lm/lmr6.pfb></usr/share/texmf/fonts/type1/public/lm/lmr8.pfb></us
 r/share/texmf/fonts/type1/public/lm/lmr9.pfb></usr/share/texmf/fonts/type1/publ
 ic/lm/lmri10.pfb></usr/share/texmf/fonts/type1/public/lm/lmsy9.pfb>
-Output written on paper.pdf (12 pages, 385750 bytes).
+Output written on paper.pdf (12 pages, 385937 bytes).
 PDF statistics:
  97 PDF objects out of 1000 (max. 8388607)
  67 compressed objects within 1 object stream
